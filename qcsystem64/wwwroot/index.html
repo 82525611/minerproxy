@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>监控面板</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="js/vant.2.6.3.min.css" />
+    <link rel="stylesheet" type="text/css" href="//g.alicdn.com/de/prismplayer/2.8.2/skins/default/aliplayer-min.css" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <style type="text/css">
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap" id="app" v-cloak >
+     
+        <!-- 分类区域 -->
+        <van-tabs v-model="tabActive" color="#FF7C1C" title-active-color="#FF7C1C" >
+            <van-tab title="控制台">
+                <div>
+                    <div v-for="item in cosnolelist" style="padding:2px 10px"><span style="color:red">[{{item.createtime}}]</span> {{item.text}}</div>
+        
+                </div>
+            </van-tab>
+            <van-tab title="矿池">
+                <div>
+                    <div><van-button round block type="default" @click="getsetting()">刷新列表</van-button></div>
+                    <div v-for="item in ethpool" style="padding:10px 0;border-bottom:1px solid #eee">
+                   
+                        <div style="color:red;padding:10px 20px">[矿池：{{item.setting.id}}]{{item.setting.name}}</div>
+                        <van-collapse v-model="item.showmc">
+                           
+                            <van-collapse-item :title="'详细信息('+item.sumpowerstr+')'" name="1">
+                                <div style="padding:16px">
+                                    <div>
+                                        总工作量：{{item.submit_work_num}},抽水量：{{item.benefits_num}}（{{item.shijibili}}）,设置抽水：{{item.setting.benefits_ratio}}%
+                                    </div>
+                                    <div>
+                                        抽水服务器：{{item.setting.bserverip}}:{{item.setting.bserverport}}
+                                    </div>
+                                    <div style="font-size:12px">
+                                        抽水地址：{{item.setting.benefits_address}}
+                                    </div>
+                                    <div>
+                                        转发端口：{{item.setting.serverip}}:{{item.setting.serverport}}
+                                    </div>
+                                    <div>
+                                        本地端口:{{item.setting.localport}}
+                                    </div>
+                                    <div style="display:flex;">
+
+                                        <van-button round block type="info" @click="changechoushui(item.setting.benefits_ratio,item.setting.id)" style="width:100px;line-height:30px;height:30px">更改抽水比例</van-button>
+                                        <van-button round block type="warning" @click="delpool(item.setting.id)" style="width:100px;line-height:30px;height:30px;margin-left:20px">删除矿池</van-button>
+                                    </div>
+
+ </div>
+                            </van-collapse-item>
+                            <van-collapse-item :title="'机器数:' + item.machines.length" name="2" >
+                                <van-cell-group inset>
+                                <van-cell v-for="item2 in item.machines" :title="item2.device_name + '('+item2.powerstr+','+item2.loginTime+')'" :label="item2.address">
+                                  
+                                    <van-tag type="primary" >{{item2.benefits_num}}/{{item2.submit_work_num}}</van-tag>
+                                </van-cell>
+                                    </van-cell-group>
+                            </van-collapse-item>
+                        </van-collapse>
+                    </div>
+                </div>
+            </van-tab>
+            <van-tab title="新矿池">
+                <van-cell-group title="创建矿池">
+                    <van-form label-width="150" validate-first scroll-to-error @submit="submitRegisterDataFn">
+                        <van-field label-class="answer-label"
+                                   v-model.trim="name"
+                                   name="name"
+                                   label="矿池名"
+                                   placeholder="随便填"
+                                   maxlength="16"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="servername"
+                                   name="servername"
+                                   label="矿池服务器地址"
+                                   placeholder="矿池服务器地址"
+                                   maxlength="200"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="serverport"
+                                   name="serverport"
+                                   label="矿池服务器端口"
+                                   placeholder="矿池服务器端口"
+                                   maxlength="5"
+                                   type="digit"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="localport"
+                                   name="localport"
+                                   label="监听端口"
+                                   placeholder="监听端口"
+                                   maxlength="5"
+                                   type="digit"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="ratio"
+                                   name="ratio"
+                                   label="抽水比例%"
+                                   placeholder="抽水比例"
+                                   maxlength="5"
+                                   type="number"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="baddress"
+                                   name="baddress"
+                                   label="抽数钱包地址"
+                                   placeholder="抽数钱包地址"
+                                   maxlength="100"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="bservername"
+                                   name="bservername"
+                                   label="抽水服务器ip"
+                                   placeholder="抽水服务器ip"
+                                   maxlength="200"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="bserverport"
+                                   name="bserverport"
+                                   label="抽水转发端口"
+                                   placeholder="抽水转发端口"
+                                   maxlength="5"
+                                   type="digit"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="proxyip"
+                                   name="proxyip"
+                                   label="代理服务器"
+                                   placeholder="代理服务器（选填）"
+                                   maxlength="200"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="proxyport"
+                                   name="proxyport"
+                                   label="代理端口"
+                                   placeholder="代理端口"
+                                   maxlength="5"
+                                   type="digit"></van-field>
+
+                        <div style="padding: 30px;">
+                            <van-button round block type="info" native-type="submit" class="btnto">提交</van-button>
+                        </div>
+                    </van-form>
+                </van-cell-group>
+            </van-tab>
+        </van-tabs>
+        <!-- 版权声明 -->
+        <footer class="copyright">
+            <p>监控面板</p>
+            <p>CopyRight©2022 zbr</p>
+        </footer>
+        <div style="position:fixed;top:0;height:100%;width:100%;left:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:999" v-if="showlogin">
+            <div style="background-color:white;padding:30px">
+                <van-cell-group inset>
+                    <van-field v-model="password" type="password" label="请输入密码" placeholder="请输入密码" />
+                    </van-cell-group>
+                    <div style="margin-top:30px">
+                        <van-button round block type="info" class="btnto" @click="login">登录</van-button>
+                    </div>
+</div>
+        </div>
+    </div>
+    <script src="js/vue.2.6.11.min.js" type="text/javascript"></script>
+    <script src="js/vant.2.6.3.min.js" type="text/javascript"></script>
+    <script src="//res.wx.qq.com/open/js/jweixin-1.0.0.js" type="text/javascript"></script>
+    <script src="js/jquery.min.js" type="text/javascript"></script>
+    <script src="js/axios.0.19.2.min.js" type="text/javascript"></script>
+    <script src="js/index.js?v=3" type="text/javascript"></script>
+    
+</body>
+</html>

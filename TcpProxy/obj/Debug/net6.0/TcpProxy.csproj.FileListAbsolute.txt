@@ -1,0 +1,12 @@
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\TcpProxy.csproj.AssemblyReference.cache
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\TcpProxy.GeneratedMSBuildEditorConfig.editorconfig
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\TcpProxy.AssemblyInfoInputs.cache
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\TcpProxy.AssemblyInfo.cs
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\TcpProxy.csproj.CoreCompileInputs.cache
+E:\project\netcore\qcethnetwork\TcpProxy\bin\Debug\net6.0\TcpProxy.deps.json
+E:\project\netcore\qcethnetwork\TcpProxy\bin\Debug\net6.0\TcpProxy.dll
+E:\project\netcore\qcethnetwork\TcpProxy\bin\Debug\net6.0\TcpProxy.pdb
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\TcpProxy.dll
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\refint\TcpProxy.dll
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\TcpProxy.pdb
+E:\project\netcore\qcethnetwork\TcpProxy\obj\Debug\net6.0\ref\TcpProxy.dll
