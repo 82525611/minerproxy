@@ -13,6 +13,7 @@ using (var db = new ModelContext())
         EthRoute.all_routes.Add(new EthRoute(x));
     });
 }
+
 #endregion
 
 /// <summary>

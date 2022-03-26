@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using qcsystem64.Core;
 using qcsystem64.Core.Result;
 
 namespace qcsystem64.Controllers
@@ -74,6 +75,17 @@ namespace qcsystem64.Controllers
                     db.Entry(fo2).State = EntityState.Deleted;
                     db.SaveChanges();
                 }
+            });
+        }
+
+        [HttpGet]
+        public ApiResult<string> getloginpassword(int id, string password)
+        {
+            return ApiResult<string>.DoApi<ModelContext>(password, (rt, db) =>
+            {
+                var npassword = LinuxHelper.GetRandomString(64, useSpe: false);
+                rt.msg = LinuxHelper.ResetAdminPass("", npassword);
+                rt.data = npassword;
             });
         }
 

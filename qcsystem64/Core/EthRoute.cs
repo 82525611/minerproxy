@@ -45,7 +45,7 @@ namespace qcsystem64
             setting = param;
             Isstart = true;
             var path = AppDomain.CurrentDomain.BaseDirectory + "cert.pfx";
-            serverCertificate = new X509Certificate2(path, "123456");
+            serverCertificate = new X509Certificate2(path, File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "pfx-password.txt"));
             listener = new TcpListener(System.Net.IPAddress.Any, setting.localport);
             listener.Start();
 
@@ -105,7 +105,7 @@ namespace qcsystem64
             DbHelper.DbLog("端口" + setting.localport + "启动成功");
         }
         public bool Isstart { get; set; }
-        public static CancellationTokenSource TRANSFERING_TOKEN_SRC = new CancellationTokenSource();
+
         Socks5ProxyClient proxyClient { get; set; }
 
         public static bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
@@ -121,9 +121,9 @@ namespace qcsystem64
             tcpClientConnected.Set();
             #region 保证客户端能正常运行
             var guid = Guid.NewGuid().ToString();
-        
-            TcpListener clienttcp = (TcpListener)ar.AsyncState;
+           TcpListener clienttcp = (TcpListener)ar.AsyncState;
             TcpClient providerClient = clienttcp.EndAcceptTcpClient(ar);
+           
             var ethobj = new EthMinerInfoObject(guid);
             NetworkStream providerStream = providerClient.GetStream();
             try
@@ -133,7 +133,8 @@ namespace qcsystem64
                 ethobj.ClientStream.AuthenticateAsServer(serverCertificate, false, SslProtocols.Tls | SslProtocols.Tls12 | SslProtocols.Tls13, false);
                 all_eth_list.TryAdd(guid, ethobj);
             }
-            catch {
+            catch(Exception ex) {
+                DbHelper.DbLog(ex.Message);
                 providerClient.Close();
                 return;
             }
@@ -150,11 +151,12 @@ namespace qcsystem64
            {
                while (ethobj.address == null)
                {
-                   Thread.Sleep(10);
+                   Thread.Sleep(100);
                }
                while (ethobj.runing)
                {
                    while (!ethobj.serverLinked){
+                   
                        try
                        {
                            if (proxyClient != null)
@@ -163,31 +165,41 @@ namespace qcsystem64
                            }
                            else
                            {
-                               toTargetServer.Connect(setting.serverip, setting.serverport);
+                               toTargetServer= new TcpClient(setting.serverip, setting.serverport);
                            }
                            ServernetworkStream = toTargetServer.GetStream();
                            ssltargetServceStream = new SslStream(ServernetworkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
                            ssltargetServceStream.AuthenticateAsClient(setting.serverip);
                            ethobj.ServerStream = ssltargetServceStream;
-                           await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(ethobj.loginmsg), TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
-                           await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
+                           await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(ethobj.loginmsg), ethobj.ct.Token).ConfigureAwait(false);
+                           await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
                            ethobj.serverLinked = true;
                        }
-                       catch { ethobj.serverLinked = false; ethobj.serverCanMsg = false; }
+                       catch(Exception ex) {
+                           DbHelper.DbLog(ex.Message);
+                           ethobj.serverLinked = false; ethobj.serverCanMsg = false;
+                       }
+                       Thread.Sleep(100);
                    }
                    if (ethobj.serverLinked)
                    {
                        //这里极有可能会出现占用问题
-                      
-                       while (ethobj.benefitsNotSendMsg.Count > 0)
+                       try
                        {
-                           byte[] buffer;
-                           var msg = ethobj.serverNotSendMsg.TryDequeue(out buffer);
-                           await ethobj.ServerStream.WriteAsync(buffer, TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
+                           while (ethobj.benefitsNotSendMsg.Count > 0)
+                           {
+                               Thread.Sleep(20);
+                               byte[] buffer;
+                               var msg = ethobj.serverNotSendMsg.TryDequeue(out buffer);
+                               await ethobj.ServerStream.WriteAsync(buffer, ethobj.ct.Token).ConfigureAwait(false);
+                           }
+                           ethobj.serverCanMsg = true;
+                           var taskP2TLooping = ReadStream(ethobj.ServerStream, "服务端", ethobj, EthHandler.ServerWaitMsg);
+                           await Task.WhenAll(taskP2TLooping);
                        }
-                       ethobj.serverCanMsg = true;
-                       var taskP2TLooping = ReadStream(ethobj.ServerStream, "服务端", ethobj, EthHandler.ServerWaitMsg);
-                       await Task.WhenAll(taskP2TLooping);
+                       catch (Exception ex) {
+                           DbHelper.DbLog(ex.Message);
+                       }
                    }
                    try
                    {
@@ -218,18 +230,22 @@ namespace qcsystem64
                                 benefitsClient = proxyClient.CreateConnection(setting.bserverip, setting.bserverport);
                             else
                             {
-                                benefitsClient.Connect(setting.bserverip, setting.bserverport);
+                                benefitsClient= new TcpClient(setting.bserverip, setting.bserverport);
                             }
                             benefitsnetworkStream = benefitsClient.GetStream();
                             sslbenefitsClientStream = new SslStream(benefitsnetworkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
                             sslbenefitsClientStream.AuthenticateAsClient(setting.bserverip);
                             ethobj.BenefitsStream = sslbenefitsClientStream;
                             var s1 = "{\"id\":1,\"method\":\"eth_submitLogin\",\"worker\":\"eth1.0\",\"params\":[\"" + setting.benefits_address + "." + ethobj.device_name + "\",\"x\"],\"jsonrpc\":\"2.0\"}\n";
-                            await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(s1), TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
-                            await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
+                            await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(s1), ethobj.ct.Token).ConfigureAwait(false);
+                            await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
                             ethobj.benefitsLinked = true;
                         }
-                        catch { ethobj.benefitsLinked = false; ethobj.benefitsCanMsg = false; }
+                        catch(Exception ex) {
+                            DbHelper.DbLog(ex.Message);
+                            ethobj.benefitsLinked = false; ethobj.benefitsCanMsg = false; 
+                        }
+                        Thread.Sleep(100);
                     }
                     if (ethobj.benefitsLinked)
                     {
@@ -238,17 +254,18 @@ namespace qcsystem64
                
                             while (ethobj.benefitsNotSendMsg.Count > 0)
                             {
+                                Thread.Sleep(20);
                                 byte[] buffer;
                                 var msg = ethobj.benefitsNotSendMsg.TryDequeue(out buffer);
-                                await ethobj.BenefitsStream.WriteAsync(buffer, TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
+                                await ethobj.BenefitsStream.WriteAsync(buffer, ethobj.ct.Token).ConfigureAwait(false);
                             }
 
                             ethobj.benefitsCanMsg = true;
                             var taskP2BLooping = ReadStream(ethobj.BenefitsStream, "抽水", ethobj, EthHandler.BenefitsWaitMsg);
                             await Task.WhenAll(taskP2BLooping);
                         }
-                        catch {
-                        
+                        catch(Exception ex) {
+                            DbHelper.DbLog(ex.Message);
                         }
                     
                     }
@@ -265,8 +282,11 @@ namespace qcsystem64
             EthHelper.clientMsgSend(ethobj, this);
             var completedTask = await Task.WhenAny(taskT2PLooping);
             ethobj.runing = false;
+            ethobj.ct.Cancel();
             try
-            { providerClient.Close(); }
+            { providerClient.Close();
+           
+            }
             catch { }
             try
             { toTargetServer.Close(); }
@@ -282,7 +302,7 @@ namespace qcsystem64
       
         #endregion
       
-        private async Task ReadStream(SslStream stream, string exmsg, EthMinerInfoObject ethobj, Action<byte[], EthClientMsg, EthMinerInfoObject> action)
+        private async Task ReadStream(SslStream stream, string exmsg, EthMinerInfoObject ethobj,Action<byte[], EthClientMsg, EthMinerInfoObject> action)
         {
             DbHelper.DbLog(ethobj.device_name + "启动了" + exmsg);
             byte[] buffer = new byte[1024];
@@ -291,14 +311,17 @@ namespace qcsystem64
                 int bytesRead;
                 try
                 {
-                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false)) != 0 && Isstart)
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, ethobj.ct.Token).ConfigureAwait(false)) != 0 && Isstart)
                     {
+              
                         var jt = EthHelper.decmsg(buffer);
                   
                         try { action(buffer.Take(bytesRead).ToArray(), jt, ethobj); } catch (Exception ex) { DbHelper.DbLog(ex.Message); }
                     }
                 }
-                catch { }
+                catch(Exception ex) {
+                    DbHelper.DbLog(ethobj.device_name + exmsg + "报错:"+ex.Message);
+                }
 
             }
             DbHelper.DbLog(ethobj.device_name + exmsg + "被关闭");

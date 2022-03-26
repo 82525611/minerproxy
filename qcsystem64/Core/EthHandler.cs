@@ -18,7 +18,6 @@ namespace qcsystem64
             {
                 return new Action<byte[], EthClientMsg, EthMinerInfoObject>(async (buffer, msgjson, ethobj) =>
                 {
-                    var txt = JsonConvert.SerializeObject(msgjson);
                     string pow_hash = null;
                     if (msgjson.id == 0)
                     {
@@ -26,15 +25,15 @@ namespace qcsystem64
                         pow_hash = ((JArray)msgjson.result)[0].ToString();
                         ethobj.benfits_jobs.TryAdd(pow_hash, DateTime.Now);
                     }
-                    if (msgjson.id != 1) await Task.Run(() =>
-                    {
+                    if (msgjson.id == 0)
                         ethobj.clientMsg.Enqueue(new SendClientMsg
                         {
                             bytes = buffer,
                             id = msgjson.id,
                             isbenfits = true
                         });
-                    });
+
+                    
                 });
             }
         }
@@ -44,29 +43,31 @@ namespace qcsystem64
             {
                 return new Action<byte[], EthClientMsg, EthMinerInfoObject>((buffer, msgjson, ethobj) =>
                 {
-                    var txt = JsonConvert.SerializeObject(msgjson);
+                 
                     string pow_hash = null;
                     if (msgjson.id == 0)
                     {
                         ethobj.lastworkServermsgTime = DateTime.Now;
                         pow_hash = ((JArray)msgjson.result)[0].ToString();
                         ethobj.server_jobs.TryAdd(pow_hash, DateTime.Now);
-                        ethobj.clientMsg.Enqueue(new SendClientMsg
-                        {
-                            bytes = buffer,
-                            id = msgjson.id,
-                            isbenfits = false
-                        });
+                        //发给客户端
+                        if (msgjson.id == 0)
+                            ethobj.clientMsg.Enqueue(new SendClientMsg
+                            {
+                                bytes = buffer,
+                                id = msgjson.id,
+                                isbenfits = false
+                            });
                     }
                 });
             }
         }
-
         public static Action<byte[], EthClientMsg, EthMinerInfoObject> ClientWaitMsg(EthRoute route)
         {
        
                 return new Action<byte[], EthClientMsg, EthMinerInfoObject>(async (buffer, msgjson, ethobj) =>
                 {
+                  
                     if (msgjson.method == "eth_submitLogin")
                     {
                         var jsp = msgjson.@params[0].ToString().Split('.');
@@ -80,7 +81,7 @@ namespace qcsystem64
 
                         ethobj.clientMsg.Enqueue(new SendClientMsg
                         {
-                            bytes = Encoding.UTF8.GetBytes(EthHelper.loginsuccessmsg),
+                            bytes = Encoding.UTF8.GetBytes(EthHelper.loginsuccessmsg(msgjson.id)),
                             id = 1,
                             isbenfits = false
                         });
@@ -102,7 +103,7 @@ namespace qcsystem64
                         //先让客户端成功再说
                         ethobj.clientMsg.Enqueue(new SendClientMsg
                         {
-                            bytes = Encoding.UTF8.GetBytes("{\"id\":" + msgjson.id + ",\"result\":true,\"jsonrpc\":\"2.0\"}\n"),
+                            bytes = Encoding.UTF8.GetBytes(EthHelper.loginsuccessmsg(msgjson.id)),
                             id = msgjson.id,
                             isbenfits = false
                         });
@@ -122,6 +123,9 @@ namespace qcsystem64
                         by3 = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msgjson) + "\n");
                         await ethobj.SendMsgToBenefits(by3);
 
+                    }
+                    else {
+                        await ethobj.SendMsgToServer(buffer);
                     }
                 });
             

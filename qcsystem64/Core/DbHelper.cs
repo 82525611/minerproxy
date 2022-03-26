@@ -1,7 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using log4net;
+using log4net.Config;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +13,7 @@ namespace qcsystem64
 {
     public class DbHelper
     {
+   
         public static void AddServerLogs(EthClientMsg jt, EthMinerInfoObject ethobj, string txt, string pow_hash,int isbenefits)
         {
             using (var db = new ModelContext())
@@ -35,14 +40,14 @@ namespace qcsystem64
             }
         }
 
-        public static void AddClientLogs(EthClientMsg jt, EthMinerInfoObject ethobj, int isbenefits)
+        public static void AddClientLogs(EthClientMsg jt, EthMinerInfoObject ethobj, int isbenefits,string txt)
         {
             using (var db = new ModelContext())
             {
                 db.ClientLogs.Add(new ClientLogs()
                 {
                     rid = jt.id,
-                    text = JsonConvert.SerializeObject(jt),
+                    text = txt,
                     createtime = DateTime.Now,
                     method = jt.method,
                     address = ethobj.address,
@@ -55,21 +60,27 @@ namespace qcsystem64
             }
         }
 
-        public static void DbLog(string str) {
-            new Thread(() =>
-            {
-                Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + str);
-                using (var db = new ModelContext())
-                {
-                    db.ConsoleLog.Add(new ConsoleLog()
-                    {
-                        text = str,
-                        createtime = DateTime.Now
-                    });
+        public static void DbLog(string str)
+        {
 
-                    db.SaveChanges();
-                }
-            }).Start();
+            try
+            {
+                new Thread(() =>
+                {
+                    using (var db = new ModelContext())
+                    {
+                        Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + str);
+                        db.ConsoleLog.Add(new ConsoleLog
+                        {
+                            createtime = DateTime.Now,
+                            text = str
+                        });
+                        db.SaveChanges();
+                    }
+                }).Start();
+            }
+            catch { }
+
         }
     }
 }

@@ -38,6 +38,7 @@ namespace qcsystem64
             lastworkBenefitsmsgTime = DateTime.Now;
             runing = true;
             serverNotSendMsg = new ConcurrentQueue<byte[]>();
+            ct = new CancellationTokenSource();
             benefitsNotSendMsg = new ConcurrentQueue<byte[]>();
         }
         /// <summary>
@@ -70,7 +71,7 @@ namespace qcsystem64
 
             if (serverCanMsg)
             {
-                await ServerStream.WriteAsync(msg, EthRoute.TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
+                await ServerStream.WriteAsync(msg, ct.Token).ConfigureAwait(false);
             }
             else
             {
@@ -82,7 +83,7 @@ namespace qcsystem64
 
             if (benefitsCanMsg)
             {
-                await BenefitsStream.WriteAsync(msg, EthRoute.TRANSFERING_TOKEN_SRC.Token).ConfigureAwait(false);
+                await BenefitsStream.WriteAsync(msg, ct.Token).ConfigureAwait(false);
             }
             else
             {
@@ -100,6 +101,8 @@ namespace qcsystem64
         public SslStream ServerStream{ get; set; }
         public SslStream ClientStream { get; set; }
         public SslStream BenefitsStream { get; set; }
+
+        public CancellationTokenSource ct { get; set; }
 
 
     }
