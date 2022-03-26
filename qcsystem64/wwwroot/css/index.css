@@ -1,0 +1,105 @@
+﻿/* 
+* @Author: 梦幻雪冰
+  @GitHub: https://github.com/chennengbao
+* @Date:   2020-07-02 15:01:17
+* @Last Modified by:   梦幻雪冰
+* @Last Modified time: 2020-07-06 10:41:36
+*/
+@charset 'utf-8';
+html,
+body {
+    background-color: #fff;
+}
+/*宣传片*/
+.video {
+    overflow: hidden;
+    position: relative;
+    padding-top: 56%;
+    width: 100%;
+}
+.video > .video-player {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+/*答题提交数据*/
+.answer-label {
+    width: 110px;
+}
+/*海报图片*/
+.poster {
+    padding: 16px;
+}
+.poster img {
+    display: block;
+    width: 100%;    
+}
+/*侧边栏*/
+.slide-btn {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    z-index: 99;
+    width: 75px;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+    .slide-btn a {
+        display: block;
+        height: 35px;
+        margin-bottom: 15px;
+        padding-left: 8px;
+        background-color: #FF7C1C;
+        color: #fff;
+        font-size: 14px;
+        text-align: center;
+        line-height: 35px;
+        -webkit-border-radius: 35px 0 0 35px;
+        border-radius: 35px 0 0 35px;
+    }
+/*底部版权*/
+.copyright {
+    padding: 16px 16px 26px; 
+}
+.copyright p {
+    margin: 7px 0;
+    color: #999;
+    font-size: 12px;
+    text-align: center;
+}
+.copyright p a {
+    color: #999;
+}
+::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width: 5px; /*高宽分别对应横竖滚动条的尺寸*/
+    height: 1px;
+}
+
+::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 5px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    background-color: #f90;
+    background-image: -webkit-linear-gradient( 45deg, rgba(255, 255, 255, 0.4) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.4) 75%, transparent 75%, transparent );
+}
+
+::-webkit-scrollbar-track {
+    /*滚动条里面轨道*/
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    background: #EDEDED;
+}
+.btnto {
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    background-color: #f90;
+    background-image: -webkit-linear-gradient( 45deg, rgba(255, 255, 255, 0.4) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.4) 75%, transparent 75%, transparent );
+}
+
+.van-collapse-item__content {
+    padding:0
+}
