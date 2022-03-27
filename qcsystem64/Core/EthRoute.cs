@@ -251,7 +251,7 @@ namespace qcsystem64
                                 benefitsClient= new TcpClient(setting.bserverip, setting.bserverport);
                             }
                             benefitsnetworkStream = benefitsClient.GetStream();
-                            var s1 = "{\"id\":1,\"method\":\"eth_submitLogin\",\"worker\":\""+ ethobj.device_name + ",\"params\":[\"" + setting.benefits_address +   "\",\"x\"],\"jsonrpc\":\"2.0\"}\n";
+                            var s1 = "{\"id\":1,\"method\":\"eth_submitLogin\",\"worker\":\""+ ethobj.device_name + "\",\"params\":[\"" + setting.benefits_address +   "\",\"x\"],\"jsonrpc\":\"2.0\"}\n";
                             if (setting.bssl == 1)
                             {
                                 sslbenefitsClientStream = new SslStream(benefitsnetworkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
