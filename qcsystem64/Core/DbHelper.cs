@@ -11,10 +11,15 @@ using System.Threading.Tasks;
 
 namespace qcsystem64
 {
+    public class logobj {
+        public string text { get; set; }
+        public DateTime createtime { get; set; }
+        public string id { get; set; }
+    }
     public class DbHelper
     {
         static string lockpath = AppDomain.CurrentDomain.BaseDirectory + "log.cancel";
-        static string lockpath2 = AppDomain.CurrentDomain.BaseDirectory + "logdb.cancel";
+        public static ConcurrentQueue<logobj> logMsg = new ConcurrentQueue<logobj>();
         public static void AddServerLogs(EthClientMsg jt, EthMinerInfoObject ethobj, string txt, string pow_hash,int isbenefits)
         {
             using (var db = new ModelContext())
@@ -63,31 +68,20 @@ namespace qcsystem64
 
         public static void DbLog(string str,string area="")
         {
-
             try
             {
                 if (!File.Exists(lockpath))
                 {
                     Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + str + (area != "" ? ("行号:" + area) : ""));
                 }
-                if (!File.Exists(lockpath2))
+                logMsg.Enqueue(new logobj
                 {
-                    new Thread(() =>
-                    {
-                        using (var db = new ModelContext())
-                        {
-                            db.ConsoleLog.Add(new ConsoleLog
-                            {
-                                createtime = DateTime.Now,
-                                text = str + (area != "" ? ("行号:" + area) : "")
-                            });
-                            db.SaveChanges();
-                        }
-                    }).Start();
-                }
+                    id = Guid.NewGuid().ToString(),
+                    text = str + (area != "" ? ("行号:" + area) : ""),
+                    createtime = DateTime.Now
+                });
             }
             catch { }
-
         }
     }
 }

@@ -16,7 +16,7 @@ namespace qcsystem64
         {
             get
             {
-                return new Action<byte[], EthClientMsg, EthMinerInfoObject>(async (buffer, msgjson, ethobj) =>
+                return new Action<byte[], EthClientMsg, EthMinerInfoObject>((buffer, msgjson, ethobj) =>
                 {
                     string pow_hash = null;
                     if (msgjson.id == 0)

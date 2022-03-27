@@ -43,8 +43,8 @@ var vm = new Vue({
                     }
                     return;
                 }
-                resdata.data.data.reverse()
-                resdata.data.data.forEach(q=> {
+                resdata.data.reverse()
+                resdata.data.forEach(q=> {
                     if (!ths.$data.cosnolelist.find(c=>c.id == q.id)) {
                         ths.$data.cosnolelist.unshift(q);
                     }
@@ -55,8 +55,8 @@ var vm = new Vue({
                 ths.getsetting();
                 setInterval(function () {
                     $.getJSON(location.protocol + "//" + ths.$data.host + "/eth/getconsole?password=" + ths.$data.password + "&limit=10", function (resdata2) {
-                        resdata2.data.data.reverse()
-                        resdata2.data.data.forEach(q=> {
+                        resdata2.data.reverse()
+                        resdata2.data.forEach(q=> {
                             if (!ths.$data.cosnolelist.find(c=>c.id == q.id)) {
                                 ths.$data.cosnolelist.unshift(q);
                             }
@@ -164,7 +164,10 @@ var vm = new Vue({
                 benefits_ratio: ths.ratio,
                 benefits_address: ths.baddress,
                 proxyip: ths.proxyip?ths.proxyip:null,
-                proxyport: ths.proxyip?ths.proxyport:null
+                proxyport: ths.proxyip ? ths.proxyport : null,
+                ssl: ths.ssl,
+                bssl: ths.bssl,
+                sssl: ths.sssl
                 })
                     .then(function (response) {
                         vant.Toast.clear();

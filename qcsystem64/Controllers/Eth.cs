@@ -109,16 +109,20 @@ namespace qcsystem64.Controllers
                 }
             });
         }
-        public ApiResult<ListApiResult<ConsoleLog>> getconsole(string password, int page = 1, int limit = 10) {
-            return ApiResult<ListApiResult<ConsoleLog>>.DoApi<ModelContext>(password, (rt, db) =>
+        public ApiResult<List<logobj>> getconsole(string password) {
+            return ApiResult<List<logobj>>.DoApi<ModelContext>(password, (rt, db) =>
             {
-                var sql = (from u in db.ConsoleLog select u).AsQueryable();
-                var list = sql.OrderByDescending(p => p.createtime).Skip(limit * (page - 1)).Take(limit).ToList();
-                rt.data = new ListApiResult<ConsoleLog>
+                List<logobj> nl = new List<logobj>();
+                while (DbHelper.logMsg.Count > 0)
                 {
-                    data = list,
-                    total = sql.Count()
-                };
+                    logobj nls;
+                    DbHelper.logMsg.TryDequeue(out nls);
+                    if (nls != null)
+                    {
+                        nl.Add(nls);
+                    }
+                }
+                rt.data = nl;
             });
         }
 
