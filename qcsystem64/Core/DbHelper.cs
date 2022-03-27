@@ -13,7 +13,8 @@ namespace qcsystem64
 {
     public class DbHelper
     {
-   
+        static string lockpath = AppDomain.CurrentDomain.BaseDirectory + "log.cancel";
+        static string lockpath2 = AppDomain.CurrentDomain.BaseDirectory + "logdb.cancel";
         public static void AddServerLogs(EthClientMsg jt, EthMinerInfoObject ethobj, string txt, string pow_hash,int isbenefits)
         {
             using (var db = new ModelContext())
@@ -60,24 +61,30 @@ namespace qcsystem64
             }
         }
 
-        public static void DbLog(string str)
+        public static void DbLog(string str,string area="")
         {
 
             try
             {
-                new Thread(() =>
+                if (!File.Exists(lockpath))
                 {
-                    using (var db = new ModelContext())
+                    Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + str + (area != "" ? ("行号:" + area) : ""));
+                }
+                if (!File.Exists(lockpath2))
+                {
+                    new Thread(() =>
                     {
-                        Console.WriteLine(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + str);
-                        db.ConsoleLog.Add(new ConsoleLog
+                        using (var db = new ModelContext())
                         {
-                            createtime = DateTime.Now,
-                            text = str
-                        });
-                        db.SaveChanges();
-                    }
-                }).Start();
+                            db.ConsoleLog.Add(new ConsoleLog
+                            {
+                                createtime = DateTime.Now,
+                                text = str + (area != "" ? ("行号:" + area) : "")
+                            });
+                            db.SaveChanges();
+                        }
+                    }).Start();
+                }
             }
             catch { }
 

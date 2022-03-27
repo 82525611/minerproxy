@@ -193,7 +193,7 @@ namespace qcsystem64
                            ethobj.serverLinked = true;
                        }
                        catch(Exception ex) {
-                           DbHelper.DbLog(ex.Message);
+                           DbHelper.DbLog(ex.Message,"196");
                            ethobj.serverLinked = false; ethobj.serverCanMsg = false;
                        }
                        Thread.Sleep(100);
@@ -204,7 +204,7 @@ namespace qcsystem64
                        //这里极有可能会出现占用问题
                        try
                        {
-                           while (ethobj.benefitsNotSendMsg.Count > 0)
+                           while (ethobj.benefitsNotSendMsg.Count > 0 && ethobj.runing)
                            {
                                Thread.Sleep(20);
                                byte[] buffer;
@@ -216,7 +216,7 @@ namespace qcsystem64
                            await Task.WhenAll(taskP2TLooping);
                        }
                        catch (Exception ex) {
-                           DbHelper.DbLog(ex.Message);
+                           DbHelper.DbLog(ex.Message, "219");
                        }
                    }
                    try
@@ -225,7 +225,7 @@ namespace qcsystem64
                        ethobj.serverCanMsg = false;
                        toTargetServer.Close();
                    }
-                   catch { } 
+                   catch(Exception ex) { DbHelper.DbLog(ex.Message, "228"); } 
                }
 
 
@@ -270,7 +270,7 @@ namespace qcsystem64
                             ethobj.benefitsLinked = true;
                         }
                         catch(Exception ex) {
-                            DbHelper.DbLog(ex.Message);
+                            DbHelper.DbLog(ex.Message, "273");
                             ethobj.benefitsLinked = false; ethobj.benefitsCanMsg = false; 
                         }
                         Thread.Sleep(100);
@@ -280,7 +280,7 @@ namespace qcsystem64
                         try
                         {
                
-                            while (ethobj.benefitsNotSendMsg.Count > 0)
+                            while (ethobj.benefitsNotSendMsg.Count > 0 && ethobj.runing)
                             {
                                 Thread.Sleep(20);
                                 byte[] buffer;
@@ -293,7 +293,7 @@ namespace qcsystem64
                             await Task.WhenAll(taskP2BLooping);
                         }
                         catch(Exception ex) {
-                            DbHelper.DbLog(ex.Message);
+                            DbHelper.DbLog(ex.Message, "296");
                         }
                     
                     }
@@ -301,7 +301,8 @@ namespace qcsystem64
                     {
                         ethobj.benefitsLinked = false;
                         ethobj.benefitsCanMsg = false; 
-                        benefitsClient.Close();} catch { }
+                        benefitsClient.Close();
+                    } catch { }
                 }
             }).Start();
             #endregion
@@ -339,7 +340,7 @@ namespace qcsystem64
                 int bytesRead;
                 try
                 {
-                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, ethobj.ct.Token).ConfigureAwait(false)) != 0 && Isstart)
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, ethobj.ct.Token).ConfigureAwait(false)) != 0 && Isstart && ethobj.runing)
                     {
               
                         var jt = EthHelper.decmsg(buffer);
@@ -348,7 +349,7 @@ namespace qcsystem64
                     }
                 }
                 catch(Exception ex) {
-                    DbHelper.DbLog(ethobj.device_name + exmsg + "报错:"+ex.Message);
+                   // DbHelper.DbLog(ethobj.device_name + exmsg + "报错:"+ex.Message);
                 }
 
             }
