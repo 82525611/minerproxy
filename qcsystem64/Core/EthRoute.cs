@@ -125,12 +125,20 @@ namespace qcsystem64
             TcpClient providerClient = clienttcp.EndAcceptTcpClient(ar);
            
             var ethobj = new EthMinerInfoObject(guid);
+            SslStream ClientStream;
             NetworkStream providerStream = providerClient.GetStream();
             try
             {
-        
-                ethobj.ClientStream = new SslStream(providerStream);
-                ethobj.ClientStream.AuthenticateAsServer(serverCertificate, false, SslProtocols.Tls | SslProtocols.Tls12 | SslProtocols.Tls13, false);
+
+                if (setting.ssl == 1)
+                {
+                    ClientStream = new SslStream(providerStream);
+                    ClientStream.AuthenticateAsServer(serverCertificate, false, SslProtocols.Tls | SslProtocols.Tls12 | SslProtocols.Tls13, false);
+                    ethobj.ClientStream = ClientStream;
+                }
+                else {
+                    ethobj.ClientStream = providerStream;
+                }
                 all_eth_list.TryAdd(guid, ethobj);
             }
             catch(Exception ex) {
@@ -168,11 +176,20 @@ namespace qcsystem64
                                toTargetServer= new TcpClient(setting.serverip, setting.serverport);
                            }
                            ServernetworkStream = toTargetServer.GetStream();
-                           ssltargetServceStream = new SslStream(ServernetworkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
-                           ssltargetServceStream.AuthenticateAsClient(setting.serverip);
-                           ethobj.ServerStream = ssltargetServceStream;
-                           await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(ethobj.loginmsg), ethobj.ct.Token).ConfigureAwait(false);
-                           await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
+                           if (setting.sssl == 1)
+                           {
+                               ssltargetServceStream = new SslStream(ServernetworkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+                               ssltargetServceStream.AuthenticateAsClient(setting.serverip);
+                               ethobj.ServerStream = ssltargetServceStream;
+                               await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(ethobj.loginmsg), ethobj.ct.Token).ConfigureAwait(false);
+                               await ssltargetServceStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
+                           }
+                           else {
+                               ethobj.ServerStream = ServernetworkStream;
+                               await ServernetworkStream.WriteAsync(Encoding.UTF8.GetBytes(ethobj.loginmsg), ethobj.ct.Token).ConfigureAwait(false);
+                               await ServernetworkStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
+                           }
+               
                            ethobj.serverLinked = true;
                        }
                        catch(Exception ex) {
@@ -181,6 +198,7 @@ namespace qcsystem64
                        }
                        Thread.Sleep(100);
                    }
+
                    if (ethobj.serverLinked)
                    {
                        //这里极有可能会出现占用问题
@@ -233,12 +251,22 @@ namespace qcsystem64
                                 benefitsClient= new TcpClient(setting.bserverip, setting.bserverport);
                             }
                             benefitsnetworkStream = benefitsClient.GetStream();
-                            sslbenefitsClientStream = new SslStream(benefitsnetworkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
-                            sslbenefitsClientStream.AuthenticateAsClient(setting.bserverip);
-                            ethobj.BenefitsStream = sslbenefitsClientStream;
-                            var s1 = "{\"id\":1,\"method\":\"eth_submitLogin\",\"worker\":\"eth1.0\",\"params\":[\"" + setting.benefits_address + "." + ethobj.device_name + "\",\"x\"],\"jsonrpc\":\"2.0\"}\n";
-                            await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(s1), ethobj.ct.Token).ConfigureAwait(false);
-                            await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
+                            var s1 = "{\"id\":1,\"method\":\"eth_submitLogin\",\"worker\":\""+ ethobj.device_name + ",\"params\":[\"" + setting.benefits_address +   "\",\"x\"],\"jsonrpc\":\"2.0\"}\n";
+                            if (setting.bssl == 1)
+                            {
+                                sslbenefitsClientStream = new SslStream(benefitsnetworkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+                                sslbenefitsClientStream.AuthenticateAsClient(setting.bserverip);
+                                ethobj.BenefitsStream = sslbenefitsClientStream;
+
+                                await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(s1), ethobj.ct.Token).ConfigureAwait(false);
+                                await sslbenefitsClientStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
+                            }
+                            else {
+                                ethobj.BenefitsStream = benefitsnetworkStream;
+
+                                await benefitsnetworkStream.WriteAsync(Encoding.UTF8.GetBytes(s1), ethobj.ct.Token).ConfigureAwait(false);
+                                await benefitsnetworkStream.WriteAsync(Encoding.UTF8.GetBytes(EthHelper.getworkmsg), ethobj.ct.Token).ConfigureAwait(false);
+                            }
                             ethobj.benefitsLinked = true;
                         }
                         catch(Exception ex) {
@@ -302,7 +330,7 @@ namespace qcsystem64
       
         #endregion
       
-        private async Task ReadStream(SslStream stream, string exmsg, EthMinerInfoObject ethobj,Action<byte[], EthClientMsg, EthMinerInfoObject> action)
+        private async Task ReadStream(Stream stream, string exmsg, EthMinerInfoObject ethobj,Action<byte[], EthClientMsg, EthMinerInfoObject> action)
         {
             DbHelper.DbLog(ethobj.device_name + "启动了" + exmsg);
             byte[] buffer = new byte[1024];

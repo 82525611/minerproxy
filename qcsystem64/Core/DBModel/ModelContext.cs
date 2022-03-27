@@ -87,6 +87,10 @@ namespace qcsystem64
 
         public string? proxyip { get; set; }
         public int? proxyport { get; set; }
+
+        public int? ssl { get; set; }
+        public int? bssl { get; set; }
+        public int? sssl { get; set; }
     }
 
 

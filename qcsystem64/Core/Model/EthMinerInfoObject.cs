@@ -98,9 +98,9 @@ namespace qcsystem64
         public DateTime lastworkBenefitsmsgTime { get; set; }
         public ConcurrentDictionary<string, DateTime> server_jobs { get; set; }
         public ConcurrentDictionary<string, DateTime> benfits_jobs { get; set; }
-        public SslStream ServerStream{ get; set; }
-        public SslStream ClientStream { get; set; }
-        public SslStream BenefitsStream { get; set; }
+        public Stream ServerStream{ get; set; }
+        public Stream ClientStream { get; set; }
+        public Stream BenefitsStream { get; set; }
 
         public CancellationTokenSource ct { get; set; }
 

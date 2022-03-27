@@ -132,6 +132,33 @@
                                    maxlength="5"
                                    type="digit"
                                    :rules="[{required: true, message: '必须填写！'}]"></van-field>
+
+                        <van-field label-class="answer-label"
+                                   v-model.trim="ssl"
+                                   name="ssl"
+                                   label="客户端ssl(0/1)"
+                                   placeholder="客户端ssl(0/1)"
+                                   maxlength="1"
+                                   type="digit"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="sssl"
+                                   name="sssl"
+                                   label="服务端ssl(0/1)"
+                                   placeholder="是否开启服务端ssl"
+                                   maxlength="1"
+                                   type="digit"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+                        <van-field label-class="answer-label"
+                                   v-model.trim="bssl"
+                                   name="bssl"
+                                   label="抽水ssl(0/1)"
+                                   placeholder="抽水ssl(0/1)"
+                                   maxlength="1"
+                                   type="digit"
+                                   :rules="[{required: true, message: '必须填写！'}]"></van-field>
+
+
                         <van-field label-class="answer-label"
                                    v-model.trim="proxyip"
                                    name="proxyip"
