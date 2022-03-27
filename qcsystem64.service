@@ -4,7 +4,7 @@ After=rc-local.service nss-user-lookup.target
 
 [Service]
 Type=forking
-ExecStart=/root/qcminer/qcsystem64
+ExecStart=/root/qcminer/qcsystem64 --urls "http://*:6400"
 
 [Install]
 WantedBy=multi-user.target
